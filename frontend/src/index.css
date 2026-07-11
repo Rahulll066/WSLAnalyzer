@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    margin:0;
+    background:#0E0E10;
+    color:#FAFAFA;
+    font-family:"Manrope",sans-serif;
+}
+
+h1,h2,h3,h4,h5{
+    font-family:"Outfit",sans-serif;
+}
+
+::-webkit-scrollbar{
+    width:8px;
+}
+
+::-webkit-scrollbar-thumb{
+    background:#34343a;
+    border-radius:100px;
+}
