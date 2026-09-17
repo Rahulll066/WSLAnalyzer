@@ -14,6 +14,7 @@ UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
+@router.post("")
 @router.post("/")
 async def upload_log(file: UploadFile = File(...)):
     file_path = os.path.join(UPLOAD_DIR, file.filename)

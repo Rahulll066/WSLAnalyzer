@@ -10,6 +10,7 @@ app.add_middleware(
         "http://localhost:5173",
         "https://wsl-analyzer.vercel.app",
     ],
+    allow_origin_regex=r"https://wsl-analyzer(?:-[a-z0-9-]+)?\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
