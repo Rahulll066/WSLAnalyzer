@@ -1,6 +1,8 @@
-from fastapi import APIRouter, UploadFile, File
-import shutil
+import base64
 import os
+
+from fastapi import APIRouter, UploadFile, File, HTTPException
+from pydantic import BaseModel
 
 from core.parser import parse_line
 from core.analyzer import analyze_logs
@@ -14,13 +16,16 @@ UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
-@router.post("")
-@router.post("/")
-async def upload_log(file: UploadFile = File(...)):
-    file_path = os.path.join(UPLOAD_DIR, file.filename)
+class EncodedUpload(BaseModel):
+    filename: str
+    content: str
+
+
+def analyze_file(filename: str, content: bytes):
+    file_path = os.path.join(UPLOAD_DIR, os.path.basename(filename))
 
     with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+        buffer.write(content)
 
     logs = []
 
@@ -30,19 +35,30 @@ async def upload_log(file: UploadFile = File(...)):
             if parsed:
                 logs.append(parsed)
 
-    # Analyze logs
     results = analyze_logs(logs)
     brute_force_results = detect_brute_force(logs)
-
-    # Generate statistics
     summary = generate_statistics(logs, results)
-
-    # Calculate overall risk score
     summary["risk_score"] = calculate_risk(results)
 
     return {
-        "filename": file.filename,
+        "filename": filename,
         "summary": summary,
         "brute_force": brute_force_results,
         "results": results
     }
+
+
+@router.post("")
+@router.post("/")
+async def upload_log(file: UploadFile = File(...)):
+    return analyze_file(file.filename, file.file.read())
+
+
+@router.post("/encoded")
+async def upload_encoded(payload: EncodedUpload):
+    try:
+        content = base64.b64decode(payload.content, validate=True)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail="Invalid encoded file content") from error
+
+    return analyze_file(payload.filename, content)
